@@ -1,0 +1,33 @@
+name: CI – IdeaCenter API Tests
+
+on:
+  push:
+    branches: [ "main" ]   # ✅ triggers on push to main
+
+env:
+  DOTNET_VERSION: "8.0.x"  # ✅ example environment variable
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run tests
+        env:
+          # ✅ JWT is provided securely via a repository secret
+          QA_IDEACENTER_TOKEN: ${{ secrets.QA_IDEACENTER_TOKEN }}
+        run: dotnet test --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
